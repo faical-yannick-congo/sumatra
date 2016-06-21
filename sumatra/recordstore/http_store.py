@@ -390,6 +390,7 @@ class HttpCoRRStore(RecordStore):
         _content['outputs'] = data['output_data']
         _content['dependencies'] = data['dependencies']
         _content['execution'] = data['launch_mode']
+        _content['status'] = 'finished'
         _content['timestamp'] = data['timestamp']
         _content['reason'] = data['reason']
         _content['duration'] = data['duration']
