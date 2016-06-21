@@ -441,6 +441,7 @@ class HttpCoRRStore(RecordStore):
                     break
 
         if len(records) == 1:
+            record = {}
             content = {}
             content['label'] = record['head']['label']
             content['tags'] = record['head']['tags']
