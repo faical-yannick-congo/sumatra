@@ -31,7 +31,7 @@ logger = logging.getLogger("Sumatra")
 def check_version():
     if not hasattr(git, "Repo"):
         raise VersionControlError("GitPython not installed. There is a 'git' package, but it is not GitPython (https://pypi.python.org/pypi/GitPython/)")
-    if int(git.__version__.split(".")[1]) < 2:
+    if int(git.__version__.split(".")[0]) < 2:
         raise VersionControlError("Your Git Python binding is too old. You require at least version 0.2.0-beta1.")
 
 

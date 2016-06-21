@@ -47,6 +47,7 @@ try:
 except ImportError:
     import simplejson as json
 import logging
+import traceback
 
 logger = logging.getLogger("Sumatra")
 
@@ -239,7 +240,9 @@ class Project(object):
                 self.record_store.save(self.name, record)
                 success = True
                 self._most_recent = record.label
-            except (django.db.utils.DatabaseError, sqlite3.OperationalError):
+            except:
+                import sys
+                traceback.print_exc(file=sys.stdout) 
                 print "Failed to save record due to database error. Trying again in {} seconds. (Attempt {}/{})".format(sleep_seconds, cnt, max_tries)
                 time.sleep(sleep_seconds)
                 cnt += 1

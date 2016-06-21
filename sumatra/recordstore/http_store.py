@@ -22,15 +22,21 @@ from warnings import warn
 from urlparse import urlparse, urlunparse
 try:
     import httplib2
+    import urllib2
+    import requests
     have_http = True
 except ImportError:
     have_http = False
+
 from sumatra.recordstore.base import RecordStore, RecordStoreAccessError
 from sumatra.recordstore import serialization
 from ..core import registry
+import json
 
 
 API_VERSION = 3
+
+sub_stores = ["http://10.200.95.215/"]
 
 
 def domain(url):
@@ -219,8 +225,351 @@ class HttpRecordStore(RecordStore):
 
     @classmethod
     def accepts_uri(cls, uri):
-        return uri[:4] == "http"
+        return uri[:4] == "http" and not any(store in uri for store in sub_stores)
 
+
+class HttpCoRRStore(RecordStore):
+    """
+    Handles storage of simulation/analysis records on the CoRR backend.
+
+    The server should support the following URL structure and HTTP methods:
+
+    This store implements CoRR's API for sumatra.
+    With corr configure as the following: 
+    smt init -s http://10.200.95.215/api/v0.1/private/<api-key> <project-name>
+    """
+
+    def __init__(self, server_url, disable_ssl_certificate_validation=True):
+        self.server_url = server_url
+        self.sumatra_token = "no-app"
+        if self.server_url[-1] != "/":
+            self.server_url += "/"
+        if self.sumatra_token not in self.server_url:
+            self.server_url = "{0}{1}/".format(self.server_url, self.sumatra_token)
+        self.client = httplib2.Http('.cache', disable_ssl_certificate_validation=disable_ssl_certificate_validation)
+
+    def __str__(self):
+        return "Interface to the CoRR backend API store at %s using HTTP" % self.server_url
+
+    def __getstate__(self):
+        return {
+            'server_url': self.server_url
+        }
+
+    def __setstate__(self, state):
+        self.__init__(state['server_url'])
+
+    def _get(self, url):
+        headers = {'Accept': 'application/json'}
+        response, content = self.client.request(url, headers=headers)
+        return response, content
+
+    def list_projects(self):
+        url = "%sprojects" % (self.server_url)
+        response, content = self._get(url)
+        if response.status != 200:
+            raise RecordStoreAccessError("Error in accessing %s\n%s: %s" % (url, response.status, content))
+        return [entry['id'] for entry in serialization.decode_project_list(content)['content']['projects']]
+
+    def _put_project(self, project_name, long_name='', description=''):
+        url = "%sproject/create" % (self.server_url)
+        content = {'name':project_name, 'goals':long_name, 'description':description}
+        headers = {'Content-Type': 'application/json'}
+        response, content = self.client.request(url, 'POST', json.dumps(content),
+                                                headers=headers)
+        return response, content
+
+    def _upload_file(self, record_id, file_path, group):
+        url = "%sfile/upload/%s/%s" % (self.server_url, group, record_id)
+        files = {'file':open(file_path)}
+        response = requests.post(url, files=files)
+        return response
+
+    def create_project(self, project_name, long_name='', description=''):
+        """Create an empty project in the record store."""
+        response, content = self._put_project(project_name, long_name, description)
+        if response.status != 200:
+            raise RecordStoreAccessError("%d\n%s" % (response.status, content))
+        else:
+            code = json.loads(content)['code']
+            if code != 201:
+                raise RecordStoreAccessError("%d\n%s" % (response.status, content))
+            return response, content
+
+    def update_project_info(self, project_name, long_name='', description=''):
+        """Update a project's long name and description."""
+        project = None
+        url = "%sprojects" % (self.server_url)
+        response, content = self._get(url)
+        if response.status != 200:
+            raise RecordStoreAccessError("Error in accessing %s\n%s: %s" % (url, response.status, content))
+        else:
+            code = json.loads(content)['code']
+            if code != 200:
+                raise RecordStoreAccessError("%d\n%s" % (response.status, content))
+        for p in serialization.decode_project_list(content)['content']['projects']:
+            if p['name'] == project_name:
+                project = p
+                break
+        if project:
+            url = "%sproject/update/%s" % (self.server_url, project['id'])
+            data = serialization.encode_project_info(long_name, description)
+            content = {'goals':long_name, 'description':description}
+            headers = {'Content-Type': 'application/json'}
+            response, content = self.client.request(url, 'POST', json.dumps(content),
+                                                    headers=headers)
+            if response.status != 200:
+                raise RecordStoreAccessError("%d\n%s" % (response.status, content))
+
+    def has_project(self, project_name):
+        project = None
+        url = "%sprojects" % (self.server_url)
+        response, content = self._get(url)
+        if response.status != 200:
+            raise RecordStoreAccessError("Error in accessing %s\n%s: %s" % (url, response.status, content))
+        else:
+            code = json.loads(content)['code']
+            if code != 200:
+                raise RecordStoreAccessError("%d\n%s" % (response.status, content))
+        for p in serialization.decode_project_list(content)['content']['projects']:
+            if p['name'] == project_name:
+                project = p
+                break
+        if project:
+            return True
+        else:
+            return False
+
+    def project_info(self, project_name):
+        """Return a project's long name and description."""
+        project = None
+        url = "%sprojects" % (self.server_url)
+        response, content = self._get(url)
+        if response.status != 200:
+            raise RecordStoreAccessError("Error in accessing %s\n%s: %s" % (url, response.status, content))
+        else:
+            code = json.loads(content)['code']
+            if code != 200:
+                raise RecordStoreAccessError("%d\n%s" % (response.status, content))
+        for p in serialization.decode_project_list(content)['content']['projects']:
+            if p['name'] == project_name:
+                project = p
+                break
+        if project:
+            return {'name':project['name'], 'description':project['description']}
+        else:
+            raise RecordStoreAccessError("No project named %s\n" % (project_name))
+
+    def save(self, project_name, record):
+        record_id = None
+        project = None
+        url = "%sprojects" % (self.server_url)
+        response, content = self._get(url)
+        if response.status != 200:
+            raise RecordStoreAccessError("Error in accessing %s\n%s: %s" % (url, response.status, content))
+        else:
+            code = json.loads(content)['code']
+            if code != 200:
+                raise RecordStoreAccessError("%d\n%s" % (response.status, content))
+        for p in serialization.decode_project_list(content)['content']['projects']:
+            if p['name'] == project_name:
+                project = p
+                break
+        if project is None:
+            response, content = self.create_project(project_name)
+            project = serialization.decode_project_data(content)['content']
+
+        url = "%sproject/record/create/%s" % (self.server_url, project['id'])
+        headers = {'Content-Type': 'application/json'}
+        data = json.loads(serialization.encode_record(record))
+        _content = {}
+        _content['label'] = data['label']
+        _content['tags'] = data['tags']
+        _content['system'] = data['platforms'][0]
+        _content['inputs'] = data['input_data']
+        _content['outputs'] = data['output_data']
+        _content['dependencies'] = data['dependencies']
+        _content['execution'] = data['launch_mode']
+        _content['timestamp'] = data['timestamp']
+        _content['reason'] = data['reason']
+        _content['duration'] = data['duration']
+        _content['executable'] = data['executable']
+        _content['repository'] = data['repository']
+        _content['main_file'] = data['main_file']
+        _content['version'] = data['version']
+        _content['parameters'] = data['parameters']
+        _content['script_arguments'] = data['script_arguments']
+        _content['datastore'] = data['datastore']
+        _content['input_datastore'] = data['input_datastore']
+        _content['outcome'] = data['outcome']
+        _content['stdout_stderr'] = data['stdout_stderr']
+        _content['diff'] = data['diff']
+        _content['user'] = data['user']
+        response, content = self.client.request(url, 'POST', json.dumps(_content),
+                                                headers=headers)
+        if response.status != 200:
+            raise RecordStoreAccessError("%d\n%s" % (response.status, content))
+        else:
+            code = json.loads(content)['code']
+            if code != 201:
+                raise RecordStoreAccessError("%d\n%s" % (response.status, content))
+            else:
+                record = serialization.decode_project_list(content)['content']
+                for _input in _content['inputs']:
+                    self._upload_file(record['head']['id'],'{0}/{1}'.format(_content['input_datastore']['parameters']['root'], _input['path']),'input')
+                for _output in _content['outputs']:
+                    self._upload_file(record['head']['id'],'{0}/{1}'.format(_content['datastore']['parameters']['root'], _output['path']),'output')
+
+    def _get_record(self, project_id, label):
+        records = []
+        url = "%sproject/records/%s" % (self.server_url, project_id)
+        response, content = self._get(url)
+        if response.status != 200:
+            raise RecordStoreAccessError("Error in accessing %s\n%s: %s" % (url, response.status, content))
+        else:
+            code = json.loads(content)['code']
+            if code != 200:
+                raise RecordStoreAccessError("%d\n%s" % (response.status, content))
+        if label == None:
+            for r in serialization.decode_project_list(content)['content']['records']:
+                records.append(r)
+        else:
+            for r in serialization.decode_project_list(content)['content']['records']:
+                if r['label'] == label:
+                    records.append(r)
+                    break
+
+        if len(records) == 1:
+            content = {}
+            content['label'] = record['head']['label']
+            content['tags'] = record['head']['tags']
+            content['system'] = record['head']['platforms']
+            content['inputs'] = record['head']['input_data']
+            content['outputs'] = record['head']['output_data']
+            content['dependencies'] = record['head']['dependencies']
+            content['execution'] = record['head']['launch_mode']
+            content['timestamp'] = record['body']['timestamp']
+            content['reason'] = record['body']['reason']
+            content['duration'] = record['body']['duration']
+            content['executable'] = record['body']['executable']
+            content['repository'] = record['body']['repository']
+            content['main_file'] = record['body']['main_file']
+            content['version'] = record['body']['version']
+            content['parameters'] = record['body']['parameters']
+            content['script_arguments'] = record['body']['script_arguments']
+            content['datastore'] = record['body']['datastore']
+            content['input_datastore'] = record['body']['input_datastore']
+            content['outcome'] = record['body']['outcome']
+            content['stdout_stderr'] = record['body']['stdout_stderr']
+            content['diff'] = record['body']['diff']
+            content['user'] = record['body']['user']
+            return content
+        elif len(records) > 1:
+            contents = []
+            for record in records:
+                content = {}
+                content['label'] = record['head']['label']
+                content['tags'] = record['head']['tags']
+                content['system'] = record['head']['platforms']
+                content['inputs'] = record['head']['input_data']
+                content['outputs'] = record['head']['output_data']
+                content['dependencies'] = record['head']['dependencies']
+                content['execution'] = record['head']['launch_mode']
+                content['timestamp'] = record['body']['timestamp']
+                content['reason'] = record['body']['reason']
+                content['duration'] = record['body']['duration']
+                content['executable'] = record['body']['executable']
+                content['repository'] = record['body']['repository']
+                content['main_file'] = record['body']['main_file']
+                content['version'] = record['body']['version']
+                content['parameters'] = record['body']['parameters']
+                content['script_arguments'] = record['body']['script_arguments']
+                content['datastore'] = record['body']['datastore']
+                content['input_datastore'] = record['body']['input_datastore']
+                content['outcome'] = record['body']['outcome']
+                content['stdout_stderr'] = record['body']['stdout_stderr']
+                content['diff'] = record['body']['diff']
+                content['user'] = record['body']['user']
+                contents.append(content)
+            return contents
+        else:
+            raise RecordStoreAccessError("No record with these label %s\n" % (label))
+
+    def get(self, project_name, label):
+        project = None
+        url = "%sprojects" % (self.server_url)
+        response, content = self._get(url)
+        if response.status != 200:
+            raise RecordStoreAccessError("Error in accessing %s\n%s: %s" % (url, response.status, content))
+        else:
+            code = json.loads(content)['code']
+            if code != 200:
+                raise RecordStoreAccessError("%d\n%s" % (response.status, content))
+        for p in serialization.decode_project_list(content)['content']['projects']:
+            if p['name'] == project_name:
+                project = p
+                break
+        if project:
+            return self._get_record(project['id'], label)
+        else:
+            raise RecordStoreAccessError("No project named %s\n" % (project_name))
+
+
+    def list(self, project_name, tags=None):
+        project = None
+        url = "%sprojects" % (self.server_url)
+        response, content = self._get(url)
+        if response.status != 200:
+            raise RecordStoreAccessError("Error in accessing %s\n%s: %s" % (url, response.status, content))
+        else:
+            code = json.loads(content)['code']
+            if code != 200:
+                raise RecordStoreAccessError("%d\n%s" % (response.status, content))
+        for p in serialization.decode_project_list(content)['content']['projects']:
+            if p['name'] == project_name:
+                project = p
+                break
+        if project:
+            return self._get_record(project['id'], None)
+        else:
+            raise RecordStoreAccessError("No project named %s\n" % (project_name))
+
+    def labels(self, project_name):
+        return [record['label'] for record in self.list(project_name)]
+
+    def delete(self, project_name, label):
+        warn("Deleting is not allowed by CoRR from the Command line tool for now.")
+
+
+    def delete_by_tag(self, project_name, tag):
+        warn("Deleting a record store is not allowed by CoRR from the Command line tool for now.")
+        return 0
+
+    def most_recent(self, project_name):
+        latest = None
+        records = self.list(project_name)
+        for record in records:
+            if latest is None:
+                latest = record
+            else:
+                latest_stamp = datetime.strptime(timestamp1, "%Y-%m-%d %H:%M:%S")
+                record_stamp = datetime.strptime(timestamp2, "%Y-%m-%d %H:%M:%S")
+                if max((latest_stamp, record_stamp)) == record_stamp:
+                    latest = record
+        return latest['label']
+
+    def sync(self, other, project_name):
+        if not self.has_project(project_name):
+            self.create_project(project_name)
+        super(HttpRecordStore, self).sync(other, project_name)
+
+    def clear(self):
+        warn("Clearing a record store is not allowed by CoRR from the Command line tool for now.")
+
+    @classmethod
+    def accepts_uri(cls, uri):
+        return (sub_stores[0] in uri)
 
 if have_http:
     registry.register(HttpRecordStore)
+    registry.register(HttpCoRRStore)
