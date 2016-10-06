@@ -16,6 +16,12 @@ This repository is part of a effort in integrating most popular software managem
 The current repository is a fork of the Sumatra Code with the integration capabilities built-in.
 * **[README](ABOUT.md)** – Original Sumatra Readme.
 
+## Installing this version
+
+To use this integrated version of Sumatra to CoRR, place yourself in the base of this repository and run:
+
+    $ python setup.py install
+
 ## Additional Setup Requirement
 
 The integration of this requirement to CoRR yielded some extra steps in using the original code.
