@@ -14,7 +14,7 @@ Check the platform source code at <a href="https://github.com/usnistgov/corr">us
 
 This repository is part of a effort in integrating most popular software management tools to CoRR.
 The current repository is a fork of the Sumatra Code with the integration capabilities built-in.
-* **[README](ABOUT.md)** – Original Sumatra Readme.
+* **[README](ABOUT)** – Original Sumatra Readme.
 
 ## Installing this version
 
