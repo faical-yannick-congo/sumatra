@@ -26,9 +26,12 @@ Originally to setup a project with Sumatra, one would do:
 To Use Sumatra with your CoRR account. Retrieve your access token in your home page account and do:
 
     $ smt init -s http(s):{instance_api_domain_port}/corr/api/v0.1/private/{access_token} MyProject
-
+    
 You will need the api domain and port. This is accessible through your account by downloading the 
 config file. We are working to make this init part be able to load the config file.
+For example, in my local development CoRR instance i have setup this way:
+
+    smt init -s http://localhost:5100/corr/api/v0.1/private/b6b458cecd92bf0f6308645d783d2a14f55e4d30c248482bbc6b82637de5c410 sumatra-python
 
 ## Developers & Users
 
