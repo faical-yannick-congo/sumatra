@@ -7,3 +7,8 @@ dist/*
 .project
 .pydevproject
 
+Sumatra.egg-info/
+build/
+test/example_projects/python/.cache/
+test/example_projects/python/.smt/
+test/example_projects/python/Data/

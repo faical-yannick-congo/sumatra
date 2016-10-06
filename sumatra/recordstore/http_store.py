@@ -36,7 +36,7 @@ import json
 
 API_VERSION = 3
 
-sub_stores = ["http://10.200.95.215/"]
+sub_stores = ["http://10.200.95.215/", "http://localhost:5100"]
 
 
 def domain(url):
@@ -236,16 +236,17 @@ class HttpCoRRStore(RecordStore):
 
     This store implements CoRR's API for sumatra.
     With corr configure as the following: 
-    smt init -s http://10.200.95.215/api/v0.1/private/<api-key> <project-name>
+    smt init -s http://10.200.95.215/corr/api/v0.1/private/<api-key> <project-name>
     """
 
     def __init__(self, server_url, disable_ssl_certificate_validation=True):
         self.server_url = server_url
-        self.sumatra_token = "no-app"
+        self.sumatra_token = "1f3976f98d348483f8d2bc2232f827ed3fa78b8cf0bb1a142bf41a811b371c99"
         if self.server_url[-1] != "/":
             self.server_url += "/"
         if self.sumatra_token not in self.server_url:
             self.server_url = "{0}{1}/".format(self.server_url, self.sumatra_token)
+        print self.server_url
         self.client = httplib2.Http('.cache', disable_ssl_certificate_validation=disable_ssl_certificate_validation)
 
     def __str__(self):
@@ -569,7 +570,8 @@ class HttpCoRRStore(RecordStore):
 
     @classmethod
     def accepts_uri(cls, uri):
-        return (sub_stores[0] in uri)
+        # print any(store in uri for store in sub_stores)
+        return any(store in uri for store in sub_stores)
 
 if have_http:
     registry.register(HttpRecordStore)
