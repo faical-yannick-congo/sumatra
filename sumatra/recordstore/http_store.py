@@ -157,6 +157,7 @@ class HttpRecordStore(RecordStore):
         return dict((k, data[k]) for k in ("name", "description"))
 
     def save(self, project_name, record):
+        print self.server_url
         if not self.has_project(project_name):
             self.create_project(project_name)
         url = "%s%s/%s/" % (self.server_url, project_name, record.label)
@@ -236,16 +237,25 @@ class HttpCoRRStore(RecordStore):
 
     This store implements CoRR's API for sumatra.
     With corr configure as the following: 
-    smt init -s http://10.200.95.215/corr/api/v0.1/private/<api-key> <project-name>
+    smt init -s path_to_config <project-name>
     """
 
     def __init__(self, server_url, disable_ssl_certificate_validation=True):
-        self.server_url = server_url
-        self.sumatra_token = "1f3976f98d348483f8d2bc2232f827ed3fa78b8cf0bb1a142bf41a811b371c99"
-        if self.server_url[-1] != "/":
-            self.server_url += "/"
-        if self.sumatra_token not in self.server_url:
-            self.server_url = "{0}{1}/".format(self.server_url, self.sumatra_token)
+        if 'http' in server_url:
+            self.server_url = server_url
+        else:
+            config = {}
+            with open(server_url, 'r') as config_file:
+                config = json.loads(config_file.read())
+
+            scope = config.get('default', {})
+            api = scope.get('api',{})
+            host = api.get('host','')
+            port = api.get('port', 80)
+            key = api.get('key', '')
+            path = api.get('path', '')
+            token = scope.get('app', '')
+            self.server_url = "{0}:{1}{2}/private/{3}/{4}/".format(host, port, path, key, token)
         print self.server_url
         self.client = httplib2.Http('.cache', disable_ssl_certificate_validation=disable_ssl_certificate_validation)
 
@@ -283,7 +293,7 @@ class HttpCoRRStore(RecordStore):
     def _upload_file(self, record_id, file_path, group):
         url = "%sfile/upload/%s/%s" % (self.server_url, group, record_id)
         files = {'file':open(file_path)}
-        response = requests.post(url, files=files)
+        response = requests.post(url, files=files, verify=False)
         return response
 
     def create_project(self, project_name, long_name='', description=''):
@@ -362,6 +372,7 @@ class HttpCoRRStore(RecordStore):
             raise RecordStoreAccessError("No project named %s\n" % (project_name))
 
     def save(self, project_name, record):
+        print self.server_url
         record_id = None
         project = None
         url = "%sprojects" % (self.server_url)
@@ -571,7 +582,7 @@ class HttpCoRRStore(RecordStore):
     @classmethod
     def accepts_uri(cls, uri):
         # print any(store in uri for store in sub_stores)
-        return any(store in uri for store in sub_stores)
+        return 'config.json' in uri
 
 if have_http:
     registry.register(HttpRecordStore)

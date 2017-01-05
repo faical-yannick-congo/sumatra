@@ -303,7 +303,7 @@ class DjangoRecordStore(RecordStore):
 
     @classmethod
     def accepts_uri(cls, uri):
-        return uri[:8] == "postgres" or os.path.exists(uri) or os.path.exists(uri + ".db")
+        return (uri[:8] == "postgres" or os.path.exists(uri) or os.path.exists(uri + ".db")) and 'config.json' not in uri
 
 
 registry.register(DjangoRecordStore)

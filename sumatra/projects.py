@@ -241,6 +241,7 @@ class Project(object):
                 self._most_recent = record.label
             except:
                 import traceback
+                print self.record_store.server_url
                 print traceback.print_exc()
                 print "Failed to save record due to database error. Trying again in {} seconds. (Attempt {}/{})".format(sleep_seconds, cnt, max_tries)
                 time.sleep(sleep_seconds)

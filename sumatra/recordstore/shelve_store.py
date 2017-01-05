@@ -38,6 +38,7 @@ class ShelveRecordStore(RecordStore):
 
     def __init__(self, shelf_name=".smt/records"):
         self._shelf_name = shelf_name
+        print(shelf_name)
         self.shelf = shelve.open(shelf_name)
 
     def __del__(self):
@@ -120,7 +121,7 @@ class ShelveRecordStore(RecordStore):
 
     @classmethod
     def accepts_uri(cls, uri):
-        return os.path.exists(uri) or os.path.exists(uri + ".db") or os.path.splitext(uri)[1] == ".shelf"
+        return (os.path.exists(uri) or os.path.exists(uri + ".db") or os.path.splitext(uri)[1] == ".shelf") and 'config.json' not in uri
 
 
 registry.register(ShelveRecordStore)
