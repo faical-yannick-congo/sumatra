@@ -9,9 +9,6 @@
 Check the platform source code at <a href="https://github.com/usnistgov/corr">usnistgov/corr</a>.
 </strong></sup></p>
 
-[![Gitter Chat](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/usnistgov/corr)
-
-
 This repository is part of a effort in integrating most popular software management tools to CoRR.
 The current repository is a fork of the Sumatra Code with the integration capabilities built-in.
 * **[README](ABOUT)** – Original Sumatra Readme.
