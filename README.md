@@ -98,3 +98,24 @@ This is done as such since the project-corr-python program is run as the followi
 After the run of this command by sumatra. Refresh your dashboard and find for the first time a new project
 with a single record and for the following times more records. Each records in this case should have 0 input,
 1 output and 3 dependencies. You can download any of them to visualize what sumatra captured during the run.
+
+## Developers & Users
+
+This sumatra code is currently in development mode and is registered in a localhost instance of CoRR.
+It will soon be linked to an official CoRR instance and be added as an application that users registered
+could use to push their sumatra records.
+
+After standing an instance of CoRR, to allow users to use your version of sumatra or any tools, you
+must create your application instance in CoRR and provide the access token to the users.You will find
+it on the applications dashboard.
+
+Inform the users to place the token in the app key of the config file downloadable from their home account
+view.
+
+The aim here is to minimize many instances of the same app running. So before creating records from an app
+that you provide, please ensure that this app is not provisionned already by querying its name.
+
+## Note
+
+This effort is part of part of CoRR flexible integration capability and includes many other software 
+management tools.
