@@ -40,6 +40,7 @@ At this point the project-corr-python is under git version control. Now we can c
 initialization with CoRR setup. Login to your corr account and in the home page, got to your account details.
 Then download your config file. Open it with a text editor. It should contain:
 
+```
 {
     "default": {
         "api": {
@@ -51,6 +52,7 @@ Then download your config file. Open it with a text editor. It should contain:
         "app": ""
     }
 }
+```
 
 The host will point out to the api host of the corr instance you are logged in to. You will have also your
 account private access key. This key allows sumatra to have access to your corr space to push content.
@@ -61,6 +63,7 @@ file. This key will allow your sumatra instance to be identified in the plaform 
 be pushing content to your space. In this example i have created an app and retrieved the key. The config file is 
 now as the following:
 
+```
 {
     "default": {
         "api": {
@@ -72,6 +75,7 @@ now as the following:
         "app": "2a0d338cca411b4d497f25c4d7fd7ebd2bb14dc39eb9d81bfbc564a2b5f57046"
     }
 }
+```
 
 Now you can initialize your project with sumatra by providing this config file as the following:
 
