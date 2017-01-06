@@ -22,42 +22,85 @@ To use this integrated version of Sumatra to CoRR, place yourself in the base of
 
     $ python setup.py install
 
-## Additional Setup Requirement
+## Getting started with Sumatra
 
-The integration of this requirement to CoRR yielded some extra steps in using the original code.
-Originally to setup a project with Sumatra, one would do:
+This small tutorial on how to get started with this integrated version of sumatra of CoRR requires the
+[CoRR examples](https://github.com/usnistgov/corr-examples). Please download it and install the requirements
+for the project you want to run it for. Let's assume you are using: project-corr-python.
 
-    $ smt init MyProject
+	$ cd project-corr-python
+
+With sumatra you first have to put the project under version control. We choose to use git here:
+
+    $ git init
+    $ git add --all
+    $ git commit -m "Initial commit."
+
+At this point the project-corr-python is under git version control. Now we can carry on with the sumatra
+initialization with CoRR setup. Login to your corr account and in the home page, got to your account details.
+Then download your config file. Open it with a text editor. It should contain:
+
+{
+    "default": {
+        "api": {
+            "host": "https://localhost",
+            "key": "7b37a3ff1184cb4f5ae04b3b175cfb6a63d2c6843ed051ccebfa87d8b35df4f4",
+            "path": "/corr/api/v0.1",
+            "port": 5100
+        },
+        "app": ""
+    }
+}
+
+The host will point out to the api host of the corr instance you are logged in to. You will have also your
+account private access key. This key allows sumatra to have access to your corr space to push content.
+At this point you will need an application token. There are two options: You can create an application instance
+in your dashboard under applications menu. Or query for applications and find one created by another one.
+When you have an application profile, in front of the key icon copy the app key and place it in your config
+file. This key will allow your sumatra instance to be identified in the plaform as the appropriate tool that will
+be pushing content to your space. In this example i have created an app and retrieved the key. The config file is 
+now as the following:
+
+{
+    "default": {
+        "api": {
+            "host": "https://localhost",
+            "key": "7b37a3ff1184cb4f5ae04b3b175cfb6a63d2c6843ed051ccebfa87d8b35df4f4",
+            "path": "/corr/api/v0.1",
+            "port": 5100
+        },
+        "app": "2a0d338cca411b4d497f25c4d7fd7ebd2bb14dc39eb9d81bfbc564a2b5f57046"
+    }
+}
+
+Now you can initialize your project with sumatra by providing this config file as the following:
+
+	$ smt init -s path_to_your_config_file sumatra-python
+
+For this example we placed the config in /home/fyc. Note that for this modified version of sumatra there is a 
+naming standard in case you want to change the config file name. It will have to contain: config.json in the name.
+We renamed this one to sumatra-config.json since we have other config files for other tools:
+
+	$ smt init -s /home/fyc/sumatra-config.json sumatra-python-2017
 
 To Use Sumatra with your CoRR account. Retrieve your access token in your home page account and do:
 
     $ smt init -s http(s):{instance_api_domain_port}/corr/api/v0.1/private/{access_token} MyProject
     
 You will need the api domain and port. This is accessible through your account by downloading the 
-config file. We are working to make this init part be able to load the config file.
+config file. We are working to make this init part be able to load the config file. You can now 
 
-For example, in my local development CoRR instance i have setup this way:
 
-    smt init -s http://localhost:5100/corr/api/v0.1/private/b6b458cecd92bf0f6308645d783d2a14f55e4d30c248482bbc6b82637de5c410 sumatra-python
+    $ smt init -s path_to_your_config_file sumatra-python-2017
 
-## Developers & Users
+From this point you can record as many project as you want. By following this scheme with sumatra:
 
-This sumatra code is currently in development mode and is registered in a localhost instance of CoRR.
-It will soon be linked to an official CoRR instance and be added as an application that users registered
-could use to push their sumatra records.
+	$ smt run --executable=python --main=main.py default.param
 
-After standing an instance of CoRR, to allow users to use this version of sumatra, please contact me
-(Faical Yannick P. Congo) or look into sumatra/recordstore/http_store.py and search for:
+This is done as such since the project-corr-python program is run as the following:
 
-    self.sumatra_token = "1f3976f98d348483f8d2bc2232f827ed3fa78b8cf0bb1a142bf41a811b371c99".
+	$ python main.py default.param
 
-Replace the token by the newly created application token of sumatra produced by your CoRR instance and
-provide this code to your user.
-
-We are working to make many instances of CoRR interoperable with the same sumatra code. So contacting me
-would be the most sustainable effort.
-
-## Note
-
-This effort is part of part of CoRR flexible integration capability and includes many other software 
-management tools.
+After the run of this command by sumatra. Refresh your dashboard and find for the first time a new project
+with a single record and for the following times more records. Each records in this case should have 0 input,
+1 output and 3 dependencies. You can download any of them to visualize what sumatra captured during the run.
