@@ -6,7 +6,7 @@
 </p>
 
 <p align="center"><sup><strong>
-Check the platform source code at <a href="https://github.com/usnistgov/corr">usnistgov/corr</a>.
+Check the platform docs at <a href="http://corr.readthedocs.io/en/latest/rst/README.html">readthedocs/corr</a>.
 </strong></sup></p>
 
 This repository is part of a effort in integrating most popular software management tools to CoRR.
