@@ -87,16 +87,6 @@ We renamed this one to sumatra-config.json since we have other config files for 
 
 	$ smt init -s /home/fyc/sumatra-config.json sumatra-python-2017
 
-To Use Sumatra with your CoRR account. Retrieve your access token in your home page account and do:
-
-    $ smt init -s http(s):{instance_api_domain_port}/corr/api/v0.1/private/{access_token} MyProject
-    
-You will need the api domain and port. This is accessible through your account by downloading the 
-config file. We are working to make this init part be able to load the config file. You can now 
-
-
-    $ smt init -s path_to_your_config_file sumatra-python-2017
-
 From this point you can record as many project as you want. By following this scheme with sumatra:
 
 	$ smt run --executable=python --main=main.py default.param
