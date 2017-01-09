@@ -18,6 +18,7 @@ The current repository is a fork of the Sumatra Code with the integration capabi
 To use this integrated version of Sumatra to CoRR, place yourself in the base of this repository and run:
 
     $ python setup.py install
+    $ pip install gitpython
 
 ## Getting started with Sumatra
 
