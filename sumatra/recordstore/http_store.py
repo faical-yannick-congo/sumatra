@@ -448,9 +448,12 @@ class HttpCoRRStore(RecordStore):
                 records.append(r)
         else:
             for r in serialization.decode_project_list(content)['content']['records']:
-                if r['label'] == label:
-                    records.append(r)
-                    break
+                try:
+                    if r['label'] == label:
+                        records.append(r)
+                        break
+                except:
+                    print r
 
         if len(records) == 1:
             content = {}
