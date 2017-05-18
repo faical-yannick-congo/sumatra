@@ -447,8 +447,10 @@ class HttpCoRRStore(RecordStore):
             for r in serialization.decode_project_list(content)['content']['records']:
                 records.append(r)
         else:
+            print label
             for r in serialization.decode_project_list(content)['content']['records']:
                 if r['label'] == label:
+                    print r['head']['id']
                     records.append(r)
                     break
 
@@ -504,7 +506,7 @@ class HttpCoRRStore(RecordStore):
                 content['diff'] = record['body']['body']['content']['diff']
                 content['user'] = record['body']['body']['content']['user']
                 contents.append(serialization.build_record(content))
-            return contents
+            return contents[0]
         else:
             raise RecordStoreAccessError("No record with these label %s\n" % (label))
 
