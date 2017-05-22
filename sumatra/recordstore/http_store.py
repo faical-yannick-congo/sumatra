@@ -157,7 +157,6 @@ class HttpRecordStore(RecordStore):
         return dict((k, data[k]) for k in ("name", "description"))
 
     def save(self, project_name, record):
-        print self.server_url
         if not self.has_project(project_name):
             self.create_project(project_name)
         url = "%s%s/%s/" % (self.server_url, project_name, record.label)
@@ -256,7 +255,6 @@ class HttpCoRRStore(RecordStore):
             path = api.get('path', '')
             token = scope.get('app', '')
             self.server_url = "{0}:{1}{2}/private/{3}/{4}/".format(host, port, path, key, token)
-        print self.server_url
         self.client = httplib2.Http('.cache', disable_ssl_certificate_validation=disable_ssl_certificate_validation)
 
     def __str__(self):
@@ -372,7 +370,6 @@ class HttpCoRRStore(RecordStore):
             raise RecordStoreAccessError("No project named %s\n" % (project_name))
 
     def save(self, project_name, record):
-        print self.server_url
         record_id = None
         project = None
         url = "%sprojects" % (self.server_url)
@@ -447,11 +444,8 @@ class HttpCoRRStore(RecordStore):
             for r in serialization.decode_project_list(content)['content']['records']:
                 records.append(r)
         else:
-            print label
             for r in serialization.decode_project_list(content)['content']['records']:
                 try:
-                    print r['head']['label']
-                    print r['head']['id']
                     if r['head']['label'] == label:
                         records.append(r)
                         break
