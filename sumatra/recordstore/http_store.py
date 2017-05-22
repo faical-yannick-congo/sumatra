@@ -452,7 +452,7 @@ class HttpCoRRStore(RecordStore):
                 try:
                     print r['head']['label']
                     print r['head']['id']
-                    if r['label'] == label:
+                    if r['head']['label'] == label:
                         records.append(r)
                         break
                 except:
