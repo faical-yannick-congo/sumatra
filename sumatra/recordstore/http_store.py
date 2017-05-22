@@ -482,7 +482,7 @@ class HttpCoRRStore(RecordStore):
             content['stdout_stderr'] = records[0]['body']['body']['content']['stdout_stderr']
             content['diff'] = records[0]['body']['body']['content']['diff']
             content['user'] = records[0]['body']['body']['content']['user']
-            return [serialization.build_record(content)]
+            return serialization.build_record(content)
         elif len(records) > 1:
             contents = []
             for record in records:
