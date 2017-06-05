@@ -30,5 +30,5 @@ except AttributeError:
 try:
     main(sys.argv[2:])
 except (VersionControlError, RecordStoreAccessError) as err:
-    print("Error: %s" % err.message)
+    print("Error: %s" % err)
     sys.exit(1)

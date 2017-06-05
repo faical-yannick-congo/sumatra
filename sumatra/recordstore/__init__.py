@@ -44,6 +44,6 @@ def get_record_store(uri):
     for record_store_class in registry.components[RecordStore].values():
         if record_store_class.accepts_uri(uri):
             store = record_store_class(uri)
-            print str(store)
+            print (str(store))
             return store
     return DefaultRecordStore(uri)

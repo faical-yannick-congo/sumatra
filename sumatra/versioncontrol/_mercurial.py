@@ -75,7 +75,7 @@ class MercurialWorkingCopy(WorkingCopy):
         changed = False
         for st in 'modified', 'removed', 'missing':
             if status[st]:
-                print "!!!!!", st, status[st]
+                print ("!!!!!", st, status[st])
                 changed = True
                 break
         return changed

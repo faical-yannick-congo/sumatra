@@ -241,13 +241,13 @@ class Project(object):
                 self._most_recent = record.label
             except:
                 import traceback
-                print self.record_store.server_url
-                print traceback.print_exc()
-                print "Failed to save record due to database error. Trying again in {} seconds. (Attempt {}/{})".format(sleep_seconds, cnt, max_tries)
+                print(self.record_store.server_url)
+                print(traceback.print_exc())
+                print("Failed to save record due to database error. Trying again in {} seconds. (Attempt {}/{})".format(sleep_seconds, cnt, max_tries))
                 time.sleep(sleep_seconds)
                 cnt += 1
         if cnt == max_tries:
-            print "Reached maximum number of attempts to save record. Aborting."
+            print ("Reached maximum number of attempts to save record. Aborting.")
 
     def get_record(self, label):
         """Search for a record with the supplied label and return it if found.

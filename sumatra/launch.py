@@ -350,7 +350,7 @@ class SlurmMPILaunchMode(LaunchMode):
         else:
             cmd += " %s %s %s %s" % (executable.path, mpi_options,
                                      executable.options, arguments)
-        print cmd
+        print (cmd)
         return cmd
     generate_command.__doc__ = LaunchMode.generate_command.__doc__
 
