@@ -16,12 +16,12 @@ import logging
 import git
 import os
 import shutil
-from ConfigParser import NoSectionError, NoOptionError
+from configparser import NoSectionError, NoOptionError
 try:
     from git.errors import InvalidGitRepositoryError, NoSuchPathError
 except:
     from git.exc import InvalidGitRepositoryError, NoSuchPathError
-from base import Repository, WorkingCopy, VersionControlError
+from .base import Repository, WorkingCopy, VersionControlError
 from ..core import registry
 
 
