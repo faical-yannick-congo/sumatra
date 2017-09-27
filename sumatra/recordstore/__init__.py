@@ -40,10 +40,10 @@ def get_record_store(uri):
     Return the :class:`RecordStore` object found at the given URI (which may be
     a URL or filesystem path).
     """
-    # print registry.components[RecordStore].values()
+    # print(registry.components[RecordStore].values())
     for record_store_class in registry.components[RecordStore].values():
         if record_store_class.accepts_uri(uri):
             store = record_store_class(uri)
-            print (str(store))
+            # print(str(store))
             return store
     return DefaultRecordStore(uri)

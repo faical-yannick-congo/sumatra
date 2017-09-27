@@ -19,10 +19,16 @@ The required JSON structure can be seen in recordstore.serialization.
 """
 
 from warnings import warn
-from urlparse import urlparse, urlunparse
+
+try:
+    from urlparse import urlparse, urlunparse
+except:
+    # Python 3 it seems.
+    from urllib import parse as urlparse
+    from urllib.parse import urlunparse
+
 try:
     import httplib2
-    import urllib2
     import requests
     have_http = True
 except ImportError:
@@ -109,7 +115,7 @@ class HttpRecordStore(RecordStore):
     def _get(self, url, media_type):
         headers = {'Accept': 'application/vnd.sumatra.%s-v%d+json, application/json' % (media_type, API_VERSION)}
         response, content = self.client.request(url, headers=headers)
-        return response, content
+        return response, content.decode('utf-8')
 
     def list_projects(self):
         response, content = self._get(self.server_url, 'project-list')
@@ -123,7 +129,7 @@ class HttpRecordStore(RecordStore):
         headers = {'Content-Type': 'application/vnd.sumatra.project-v%d+json' % API_VERSION}
         response, content = self.client.request(url, 'PUT', data,
                                                 headers=headers)
-        return response, content
+        return response, content.decode('utf-8')
 
     def create_project(self, project_name, long_name='', description=''):
         """Create an empty project in the record store."""
@@ -164,6 +170,7 @@ class HttpRecordStore(RecordStore):
         data = serialization.encode_record(record)
         response, content = self.client.request(url, 'PUT', data,
                                                 headers=headers)
+        content = content.decode('utf-8')
         if response.status not in (200, 201):
             raise RecordStoreAccessError("%d\n%s" % (response.status, content))
 
@@ -201,12 +208,14 @@ class HttpRecordStore(RecordStore):
     def delete(self, project_name, label):
         url = "%s%s/%s/" % (self.server_url, project_name, label)
         response, deleted_content = self.client.request(url, 'DELETE')
+        deleted_content = deleted_content.decode('utf-8')
         if response.status != 204:
             raise RecordStoreAccessError("%d\n%s" % (response.status, deleted_content))
 
     def delete_by_tag(self, project_name, tag):
         url = "%s%s/tag/%s/" % (self.server_url, project_name, tag)
         response, n_records = self.client.request(url, 'DELETE')
+        n_records = n_records.decode('utf-8')
         if response.status != 200:
             raise RecordStoreAccessError("%d\n%s" % (response.status, n_records))
         return int(n_records)
@@ -271,7 +280,7 @@ class HttpCoRRStore(RecordStore):
     def _get(self, url):
         headers = {'Accept': 'application/json'}
         response, content = self.client.request(url, headers=headers)
-        return response, content
+        return response, content.decode('utf-8')
 
     def list_projects(self):
         url = "%sprojects" % (self.server_url)
@@ -286,13 +295,13 @@ class HttpCoRRStore(RecordStore):
         headers = {'Content-Type': 'application/json'}
         response, content = self.client.request(url, 'POST', json.dumps(content),
                                                 headers=headers)
-        return response, content
+        return response, content.decode('utf-8')
 
     def _upload_file(self, record_id, file_path, group):
         url = "%sfile/upload/%s/%s" % (self.server_url, group, record_id)
         files = {'file':open(file_path)}
         response = requests.post(url, files=files, verify=False)
-        return response
+        return response.decode('utf-8')
 
     def create_project(self, project_name, long_name='', description=''):
         """Create an empty project in the record store."""
@@ -327,6 +336,7 @@ class HttpCoRRStore(RecordStore):
             headers = {'Content-Type': 'application/json'}
             response, content = self.client.request(url, 'POST', json.dumps(content),
                                                     headers=headers)
+            content = content.decode('utf-8')
             if response.status != 200:
                 raise RecordStoreAccessError("%d\n%s" % (response.status, content))
 
@@ -417,6 +427,7 @@ class HttpCoRRStore(RecordStore):
         _content['user'] = data['user']
         response, content = self.client.request(url, 'POST', json.dumps(_content),
                                                 headers=headers)
+        content = content.decode('utf-8')
         if response.status != 200:
             raise RecordStoreAccessError("%d\n%s" % (response.status, content))
         else:

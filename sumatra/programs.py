@@ -90,7 +90,7 @@ class Executable(object):
     def _get_version(self):
         returncode, output, err = run("%s --version" % self.path,
                                       shell=True, timeout=5)
-        match = version_pattern.search(output + err)
+        match = version_pattern.search(output.decode('utf-8') + err.decode('utf-8'))
         if match:
             version = match.groupdict()['version']
         else:
