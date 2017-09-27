@@ -301,7 +301,7 @@ class HttpCoRRStore(RecordStore):
         url = "%sfile/upload/%s/%s" % (self.server_url, group, record_id)
         files = {'file':open(file_path)}
         response = requests.post(url, files=files, verify=False)
-        return response.decode('utf-8')
+        return response
 
     def create_project(self, project_name, long_name='', description=''):
         """Create an empty project in the record store."""
