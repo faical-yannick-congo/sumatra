@@ -203,7 +203,7 @@ class Project(object):
                         input_datastore=self.input_datastore,
                         timestamp_format=timestamp_format)
 
-        self.add_record(record)
+        # self.add_record(record)
 
         if not isinstance(executable, programs.MatlabExecutable):
             record.register(working_copy)
