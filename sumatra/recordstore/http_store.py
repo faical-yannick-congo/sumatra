@@ -252,7 +252,7 @@ class HttpCoRRStore(RecordStore):
     smt init -s path_to_config <project-name>
     """
 
-    def __init__(self, server_url, disable_ssl_certificate_validation=True):
+    def __init__(self, server_url, disable_ssl_certificate_validation=False):
         if 'http' in server_url:
             self.server_url = server_url
         else:
@@ -304,7 +304,7 @@ class HttpCoRRStore(RecordStore):
     def _upload_file(self, record_id, file_path, group):
         url = "%sfile/upload/%s/%s" % (self.server_url, group, record_id)
         files = {'file':open(file_path, 'rb')}
-        response = requests.post(url, files=files, verify=False)
+        response = requests.post(url, files=files, verify=True)
         return response
 
     def create_project(self, project_name, long_name='', description=''):
