@@ -139,7 +139,7 @@ class ShelveRecordStore(RecordStore):
 
     @classmethod
     def accepts_uri(cls, uri):
-        return os.path.exists(uri) or os.path.exists(uri + ".db") or os.path.splitext(uri)[1] == ".shelf"
+        return ".json" not in uri and (os.path.exists(uri) or os.path.exists(uri + ".db") or os.path.splitext(uri)[1] == ".shelf")
 
     def backup(self):
         """

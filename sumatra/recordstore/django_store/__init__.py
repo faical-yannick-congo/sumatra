@@ -343,7 +343,7 @@ class DjangoRecordStore(RecordStore):
 
     @classmethod
     def accepts_uri(cls, uri):
-        return uri[:8] == "postgres" or os.path.exists(uri) or os.path.exists(uri + ".db")
+        return ".json" not in uri and (uri[:8] == "postgres" or os.path.exists(uri) or os.path.exists(uri + ".db"))
 
     def backup(self):
         """

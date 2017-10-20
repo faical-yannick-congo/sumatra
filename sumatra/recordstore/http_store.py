@@ -32,9 +32,9 @@ from sumatra.recordstore.base import RecordStore, RecordStoreAccessError
 from sumatra.recordstore import serialization
 from ..core import conditional_component
 import json
+import requests
 
 API_VERSION = 4
-
 
 def domain(url):
     return urlparse(url).netloc
@@ -240,6 +240,7 @@ class HttpRecordStore(RecordStore):
         """
         warn("Cannot remove a remote record store directly. Contact the record store administrator")
 
+@conditional_component(condition=have_http)
 class HttpCoRRStore(RecordStore):
     """
     Handles storage of simulation/analysis records on the CoRR backend.
@@ -283,7 +284,7 @@ class HttpCoRRStore(RecordStore):
     def _get(self, url):
         headers = {'Accept': 'application/json'}
         response, content = self.client.request(url, headers=headers)
-        return response, content
+        return response, content.decode('utf8')
 
     def list_projects(self):
         url = "%sprojects" % (self.server_url)
@@ -298,11 +299,11 @@ class HttpCoRRStore(RecordStore):
         headers = {'Content-Type': 'application/json'}
         response, content = self.client.request(url, 'POST', json.dumps(content),
                                                 headers=headers)
-        return response, content
+        return response, content.decode('utf8')
 
     def _upload_file(self, record_id, file_path, group):
         url = "%sfile/upload/%s/%s" % (self.server_url, group, record_id)
-        files = {'file':open(file_path)}
+        files = {'file':open(file_path, 'rb')}
         response = requests.post(url, files=files, verify=False)
         return response
 
@@ -406,7 +407,8 @@ class HttpCoRRStore(RecordStore):
         _content = {}
         _content['label'] = data['label']
         _content['tags'] = data['tags']
-        _content['system'] = data['platforms'][0]
+        if len(data['platforms']) > 0:
+            _content['system'] = data['platforms'][0]
         _content['inputs'] = data['input_data']
         _content['outputs'] = data['output_data']
         _content['dependencies'] = data['dependencies']
@@ -429,6 +431,7 @@ class HttpCoRRStore(RecordStore):
         _content['user'] = data['user']
         response, content = self.client.request(url, 'POST', json.dumps(_content),
                                                 headers=headers)
+        content = content.decode('utf8')
         if response.status != 200:
             raise RecordStoreAccessError("%d\n%s" % (response.status, content))
         else:
@@ -488,7 +491,7 @@ class HttpCoRRStore(RecordStore):
             content['stdout_stderr'] = records[0]['body']['body']['content']['stdout_stderr']
             content['diff'] = records[0]['body']['body']['content']['diff']
             content['user'] = records[0]['body']['body']['content']['user']
-            return serialization.build_record(content)
+            return serialization.decode_record(content)
         elif len(records) > 1:
             contents = []
             for record in records:
@@ -515,7 +518,7 @@ class HttpCoRRStore(RecordStore):
                 content['stdout_stderr'] = record['body']['body']['content']['stdout_stderr']
                 content['diff'] = record['body']['body']['content']['diff']
                 content['user'] = record['body']['body']['content']['user']
-                contents.append(serialization.build_record(content))
+                contents.append(serialization.decode_record(content))
             return contents[0]
         else:
             raise RecordStoreAccessError("No record with these label %s\n" % (label))
@@ -559,8 +562,12 @@ class HttpCoRRStore(RecordStore):
         else:
             raise RecordStoreAccessError("No project named %s\n" % (project_name))
 
-    def labels(self, project_name):
-        return [record['label'] for record in self.list(project_name)]
+    def labels(self, project_name, tags=None):
+        list_recs = self.list(project_name, tags=tags)
+        try:
+            return [list_recs.label]
+        except:
+            [record.label for record in list_recs]
 
     def delete(self, project_name, label):
         warn("Deleting is not allowed by CoRR from the Command line tool for now.")
