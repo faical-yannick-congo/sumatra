@@ -150,7 +150,7 @@ class Record(object):
 
         self.add_tag(STATUS_FORMAT % "pre_run")
         if project:
-            project.save_record(self)
+#             project.save_record(self)
             logger.debug("Record saved @ pre_run.")
 
         # run pre-simulation/analysis tasks, e.g. nrnivmodl
@@ -168,7 +168,7 @@ class Record(object):
         self.add_tag(STATUS_FORMAT % "running")
         self.stdout_stderr = "Not yet captured."
         if project:
-            project.save_record(self)
+#             project.save_record(self)
             logger.debug("Record saved @ running.")
 
         result = self.launch_mode.run(self.executable, self.main_file,
@@ -189,7 +189,7 @@ class Record(object):
 
         self.add_tag(STATUS_FORMAT % (status + "..."))
         if project:
-            project.save_record(self)
+#             project.save_record(self)
             logger.debug("Record saved @ gathering.")
         self.add_tag(STATUS_FORMAT % status)
 
