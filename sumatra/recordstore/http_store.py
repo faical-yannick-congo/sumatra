@@ -604,7 +604,7 @@ class HttpCoRRStore(RecordStore):
         try:
             with open(uri, "r") as config_file:
                 content = config_file.read()
-                if "https://corr-root.org" in content:
+                if "app" in content and "key" in content and "path" in content and "api" in content and "port" in content:
                     return True
                 else:
                     return False
