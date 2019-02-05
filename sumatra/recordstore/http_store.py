@@ -248,11 +248,11 @@ class HttpCoRRStore(RecordStore):
     The server should support the following URL structure and HTTP methods:
 
     This store implements CoRR's API for sumatra.
-    With corr configure as the following: 
+    With corr configure as the following:
     smt init -s path_to_config <project-name>
     """
 
-    def __init__(self, server_url, disable_ssl_certificate_validation=False):
+    def __init__(self, server_url, disable_ssl_certificate_validation=True):
         if 'http' in server_url:
             self.server_url = server_url
         else:
@@ -304,7 +304,7 @@ class HttpCoRRStore(RecordStore):
     def _upload_file(self, record_id, file_path, group):
         url = "%sfile/upload/%s/%s" % (self.server_url, group, record_id)
         files = {'file':open(file_path, 'rb')}
-        response = requests.post(url, files=files, verify=True)
+        response = requests.post(url, files=files, verify=False)
         return response
 
     def create_project(self, project_name, long_name='', description=''):
@@ -380,7 +380,7 @@ class HttpCoRRStore(RecordStore):
         if project:
             return {'name':project['name'], 'description':project['description']}
         else:
-            raise RecordStoreAccessError("No project named %s\n" % (project_name))
+            return {'name':project_name, 'description':''}
 
     def save(self, project_name, record):
         record_id = None
@@ -600,7 +600,7 @@ class HttpCoRRStore(RecordStore):
 
     @classmethod
     def accepts_uri(cls, uri):
-        # works only with 
+        # works only with
         try:
             with open(uri, "r") as config_file:
                 content = config_file.read()
